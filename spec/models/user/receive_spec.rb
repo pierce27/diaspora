@@ -148,4 +148,14 @@ describe User do
       user2.visible_post_ids.include?(post.id).should be true
     end
   end
+
+  describe '#sender' do
+    context 'request' do
+      it 'sets the sender to the webfingered person' do
+        request = Request.instantiate(:to => 'http://google.com', :from => user.person, :into => aspect.id)
+        user.sender(request, nil, request.person).should == request.person
+      end
+    end
+  end
+
 end

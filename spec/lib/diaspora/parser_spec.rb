@@ -42,14 +42,16 @@ describe Diaspora::Parser do
       end
 
       it "should create a new person upon getting a person request" do
+        Person.should_receive(:by_account_identifier).and_return(person)
         request = Request.instantiate(:to =>"http://www.google.com/", :from => person)
 
         xml = request.to_diaspora_xml
 
-        user3.destroy
         person.destroy
-        user
-        lambda { user.receive xml, person }.should change(Person, :count).by(1)
+        puts Person.count
+        user.receive xml, person
+        puts Person.count
+        #lambda { user.receive xml, person }.should change(Person, :count).by(1)
       end
 
       it "should not create a new person if the person is already here" do
@@ -68,23 +70,21 @@ describe Diaspora::Parser do
       end
     end
 
-    it "should activate the Person if I initiated a request to that url" do
+    it "should add to friends when friend request accepted" do
+      Person.should_receive(:by_account_identifier).and_return(user3.person)
       request = user.send_friend_request_to(user3.person, aspect)
       user.reload
       request.reverse_for user3
 
       xml = request.to_diaspora_xml
 
-      user3.person.destroy
-      user3.destroy
-
       user.receive xml, user3.person
-      new_person = Person.first(:url => user3.person.url)
-      new_person.nil?.should be false
 
       user.reload
       aspect.reload
-      new_contact = user.contact_for(new_person)
+
+      new_contact = user.contact_for(user3.person)
+      new_contact.should_not be nil
       aspect.people.include?(new_contact).should be true
       user.friends.include?(new_contact).should be true
     end

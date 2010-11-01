@@ -9,17 +9,18 @@ class Request
   include Diaspora::Webhooks
   include ROXML
 
-  xml_accessor :_id
-  xml_accessor :person, :as => Person
-  xml_accessor :destination_url
-  xml_accessor :callback_url
-  xml_accessor :exported_key, :cdata => true
+  xml_reader :_id
+  xml_reader :destination_url
+  xml_reader :callback_url
+  xml_reader :diaspora_handle
+  xml_reader :exported_key, :cdata => true
 
   key :person_id,       ObjectId
-  key :aspect_id,        ObjectId
+  key :aspect_id,       ObjectId
   key :destination_url, String
   key :callback_url,    String
   key :exported_key,    String
+  key :diaspora_handle, String
 
   belongs_to :person
 
@@ -31,12 +32,14 @@ class Request
     self.new(:destination_url => options[:to],
              :callback_url    => person.receive_url,
              :person          => person,
+             :diaspora_handle => person.diaspora_handle,
              :exported_key    => person.exported_key,
-             :aspect_id        => options[:into])
+             :aspect_id       => options[:into])
   end
 
   def reverse_for accepting_user
     self.person          = accepting_user.person
+    self.diaspora_handle = accepting_user.person.diaspora_handle
     self.exported_key    = accepting_user.exported_key
     self.destination_url = self.callback_url
     self.save
