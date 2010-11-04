@@ -18,15 +18,6 @@ describe Diaspora::UserModules::Friending do
   let(:user2) { make_user }
   let(:aspect2) { user2.aspects.create(:name => "aspect two") }
 
-  before do
-    deliverable = Object.new
-    deliverable.stub!(:deliver)
-    Notifier.stub!(:new_request).and_return(deliverable)
-    Notifier.stub!(:request_accepted).and_return(deliverable)
-  end
-
-
-
 
   context 'friend requesting' do
     it "should assign a request to a aspect for the user that sent it out" do
@@ -97,7 +88,7 @@ describe Diaspora::UserModules::Friending do
     end
 
     it 'should send an email on acceptance if a friend request' do
-      Notifier.should_receive(:request_accepted)
+      Notifier.should_receive(:send_request_accepted!)
       request = user.send_friend_request_to(user2.person, aspect)
       user.receive_friend_request(request.reverse_for(user2))
     end
@@ -143,9 +134,7 @@ describe Diaspora::UserModules::Friending do
         end
 
         it 'sends an email to the receiving user' do
-          mail_obj = mock("mailer")
-          mail_obj.should_receive(:deliver)
-          Notifier.should_receive(:new_request).and_return(mail_obj)
+          Notifier.should_receive(:send_new_request!).and_return(true)
           user.receive @req_xml, person_one
         end
       end
